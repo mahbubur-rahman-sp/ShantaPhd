@@ -18,7 +18,7 @@ y = bankdata['IS_MALWARE']
 
 
 
-forest = ExtraTreesClassifier(n_estimators=50)
+forest =RandomForestClassifier(n_jobs=-1)
 
 feat_selector = BorutaPy(forest, n_estimators='auto', verbose=2, random_state=1)
 feat_selector.fit(X.as_matrix(), y.as_matrix())
