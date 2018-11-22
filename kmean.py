@@ -51,7 +51,7 @@ np.append(X,alldistances,axis=1)
 print(X.shape)
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)  
 
-
+forest = SVC(kernel='linear')
 
 forest.fit(X_train, y_train)  
 
