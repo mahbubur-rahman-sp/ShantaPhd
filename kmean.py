@@ -8,7 +8,13 @@ from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from sklearn.metrics.pairwise import euclidean_distances
 from boruta import BorutaPy
+from sklearn.preprocessing import StandardScaler
+from keras.models import Sequential
+import tensorflow as tf
+from keras.utils import multi_gpu_model
 
+# Import `Dense` from `keras.layers`
+from keras.layers import Dense
 
 bankdata = pd.read_csv("perm_call_feature.csv")
 
@@ -25,6 +31,7 @@ feat_selector.fit(X.as_matrix(), y.as_matrix())
 
 X = feat_selector.transform(X.as_matrix())
 
+print(X.shape[1])
 
 clusters = 8
 
@@ -48,22 +55,62 @@ np.append(X,alldistances,axis=1)
 # X_new = rfe.transform(X)
 #X_new = X
 
-print(X.shape)
+print(X.shape[1])
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)  
 
-forest = SVC(kernel='linear')
+scaler = StandardScaler().fit(X_train)
 
-forest.fit(X_train, y_train)  
+# Scale the train set
+X_train = scaler.transform(X_train)
 
-y_pred = forest.predict(X_test)  
-print(confusion_matrix(y_test,y_pred))  
-print(classification_report(y_test,y_pred))
+# Scale the test set
+X_test = scaler.transform(X_test)
 
-# labels = model.predict(X)
-# for i in range(len(labels)):
-#     labels[i] =  labels[i] 
+with tf.device('/cpu:0'):
+    model = Sequential()
+
+    model.add(Dense(1024, activation='relu', input_shape=(X.shape[1],)))
 
 
+    # Add one hidden layer 
+    model.add(Dense(1024, activation='relu'))
+    # Add one hidden layer 
+    model.add(Dense(1024, activation='relu'))
+
+    # Add an output layer 
+    model.add(Dense(1, activation='sigmoid'))
+
+    # corr = wines.corr()
+    # sns.set()
+    # sns.heatmap(corr, 
+    #             xticklabels=corr.columns.values,
+    #             yticklabels=corr.columns.values)
+    # plt.show()
+
+    # Model output shape
+    model.output_shape
+
+    # Model summary
+    model.summary()
+
+    # Model config
+    model.get_config()
+
+# List all weight tensors 
+    model.get_weights()
+parallel_model = multi_gpu_model(model, gpus=8)
+
+parallel_model.compile(loss='binary_crossentropy',
+            optimizer='adam',
+            metrics=['accuracy'])
+                
+parallel_model.fit(X_train, y_train,epochs=100, batch_size=32*8, verbose=1)
+
+y_pred = parallel_model.predict(X_test)
+
+score = parallel_model.evaluate(X_test, y_test,verbose=1)
+
+print(score)
 # print(min(labels) )   
 # print(max(labels) )   
 # print(confusion_matrix(y,labels))
