@@ -15,6 +15,17 @@ bankdata = pd.read_csv("perm_call_feature.csv")
 X = bankdata.drop('IS_MALWARE', axis=1)  
 y = bankdata['IS_MALWARE'] 
 
+
+
+
+forest = ExtraTreesClassifier(n_estimators=50)
+
+feat_selector = BorutaPy(forest, n_estimators='auto', verbose=2, random_state=1)
+feat_selector.fit(X.as_matrix(), y.as_matrix())
+
+X = feat_selector.transform(X.as_matrix())
+
+
 clusters = 8
 
 model = KMeans(algorithm='auto', copy_x=True, init='k-means++', max_iter=600,
@@ -23,25 +34,22 @@ model = KMeans(algorithm='auto', copy_x=True, init='k-means++', max_iter=600,
 model.fit(X)
 alldistances = model.fit_transform(X)
 
-for i in range(clusters):
-    X['d'+str(i)] = pd.Series(alldistances[:,i])
+np.append(X,alldistances,axis=1)
+
+# for i in range(clusters):
+#     X['d'+str(i)] = pd.Series(alldistances[:,i])
    
 
 #forest = RandomForestClassifier(n_jobs=-1)
-forest = ExtraTreesClassifier(n_estimators=50)
 
-feat_selector = BorutaPy(forest, n_estimators='auto', verbose=2, random_state=1)
-feat_selector.fit(X.as_matrix(), y.as_matrix())
-
-X_new = feat_selector.transform(X.as_matrix())
 
 
 # rfe = RFE(estimator= svc, n_features_to_select= 50, step= 3).fit(X,y)
 # X_new = rfe.transform(X)
 #X_new = X
 
-print(X_new.shape)
-X_train, X_test, y_train, y_test = train_test_split(X_new, y, test_size = 0.20)  
+print(X.shape)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)  
 
 
 
