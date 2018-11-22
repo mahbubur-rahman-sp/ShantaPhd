@@ -27,8 +27,8 @@ for i in range(clusters):
     X['d'+str(i)] = pd.Series(alldistances[:,i])
    
 
-forest = RandomForestClassifier(n_jobs=-1)
-#forest = ExtraTreesClassifier(n_estimators=50)
+#forest = RandomForestClassifier(n_jobs=-1)
+forest = ExtraTreesClassifier(n_estimators=50)
 
 feat_selector = BorutaPy(forest, n_estimators='auto', verbose=2, random_state=1)
 feat_selector.fit(X.as_matrix(), y.as_matrix())
