@@ -1,5 +1,6 @@
 import pandas as pd  
 import numpy as np  
+from sklearn.utils import shuffle
 from sklearn.model_selection import train_test_split 
 from sklearn.ensemble import ExtraTreesClassifier, RandomForestClassifier
 from sklearn.svm import SVC, LinearSVC  
@@ -16,33 +17,42 @@ from keras.utils import multi_gpu_model
 # Import `Dense` from `keras.layers`
 from keras.layers import Dense
 
-bankdata = pd.read_csv("perm_call_feature.csv")
+labelData = shuffle(pd.read_csv("train.csv"))
 
-X = bankdata.drop('IS_MALWARE', axis=1)  
-y = bankdata['IS_MALWARE'] 
+X_label = labelData.drop('IS_MALWARE', axis=1)  
+y_label = labelData['IS_MALWARE'] 
+
+unlabelData = shuffle(pd.read_csv("test.csv"))
+
+X_unlabel = unlabelData.drop('IS_MALWARE', axis=1)  
+y_unlabel = unlabelData['IS_MALWARE'] 
 
 
-
+X = X_label.append(X_unlabel, ignore_index=True)
+ 
 
 forest =RandomForestClassifier(n_jobs=-1)
 
 feat_selector = BorutaPy(forest, n_estimators='auto', verbose=2, random_state=1)
-feat_selector.fit(X.as_matrix(), y.as_matrix())
+feat_selector.fit(X_label.as_matrix(), y_label.as_matrix())
 
+X_label = feat_selector.transform(X_label.as_matrix())
 X = feat_selector.transform(X.as_matrix())
 
 print(X.shape[1])
 
-clusters = 8
+clusters = 2
 
 model = KMeans(algorithm='auto', copy_x=True, init='k-means++', max_iter=600,
     n_init=10, n_jobs=1, precompute_distances='auto', n_clusters=clusters,
     random_state=None, tol=0.0001, verbose=0)
 model.fit(X)
-alldistances = model.fit_transform(X)
+alldistances = model.fit_transform(X_label)
 
-np.append(X,alldistances,axis=1)
+np.append(X_label,alldistances,axis=1)
 
+
+X_train, X_test, y_train, y_test = train_test_split(X_label, y_label, test_size = 0.20)  
 # for i in range(clusters):
 #     X['d'+str(i)] = pd.Series(alldistances[:,i])
    
@@ -55,8 +65,7 @@ np.append(X,alldistances,axis=1)
 # X_new = rfe.transform(X)
 #X_new = X
 
-print(X.shape[1])
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20)  
+
 
 scaler = StandardScaler().fit(X_train)
 
