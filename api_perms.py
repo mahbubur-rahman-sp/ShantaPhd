@@ -52,7 +52,7 @@ def process_folder(path,isMalware):
 suspisus_permissions = [line.strip(' \t\n\r') for line in open('perm_call_feature.txt')]
 #print(suspisus_permissions)
 
-f = open('test.csv', 'w')
+f = open('test1.csv', 'w')
 
 for i in suspisus_permissions:
     f.write(i+",")
@@ -64,6 +64,6 @@ f.write("IS_MALWARE\n")
 # process_folder('C:\\apk\\malware-feature-vector',1)
 # process_folder('C:\\apk\\feature_vector_2',0)
 
-process_folder('C:\\apk\\v2000',1)
+process_folder('C:\\apk\\apkmirror_pure',0)
  
 #process_folder('/media/shanta/18EC3E31EC3E0990/linux/feature_vector_1',fileExtraction,0)
