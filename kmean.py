@@ -26,36 +26,44 @@ def calculateAccuracy(model,data,target):
 
 
 
-labelData = shuffle(pd.read_csv("train.csv"))
+labelData = shuffle(pd.read_csv("label.csv"))
 X_label = labelData.drop('IS_MALWARE', axis=1)  
 y_label = labelData['IS_MALWARE'] 
 
+features = X_label.columns[0:]
 
 model =RandomForestClassifier(n_jobs=-1)
 print(calculateAccuracy(model,X_label,y_label))
 
 
-feat_selector = BorutaPy(model, n_estimators='auto', verbose=0, random_state=1)
+feat_selector = BorutaPy(model, n_estimators='auto', verbose=0, random_state=1,max_iter=20)
 feat_selector.fit(X_label.as_matrix(), y_label.as_matrix())
 X_label = feat_selector.transform(X_label.as_matrix())
 
+selected = feat_selector.support_
+
+for i in range(len(features)):
+    if(selected[i]):
+        print(features[i]+'\n')
+
+print('\n')
 print(calculateAccuracy(model,X_label,y_label))
 
 
 
-unlabelData = shuffle(pd.read_csv("test.csv"))
+unlabelData = shuffle(pd.read_csv("Unlabel.csv"))
 
 X_unlabel = unlabelData.drop('IS_MALWARE', axis=1)  
 
-unlabelData1 = shuffle(pd.read_csv("test1.csv"))
+# unlabelData1 = shuffle(pd.read_csv("test1.csv"))
 
-X_unlabel1 = unlabelData1.drop('IS_MALWARE', axis=1)  
+# X_unlabel1 = unlabelData1.drop('IS_MALWARE', axis=1)  
 
 
 X_unlabel =  feat_selector.transform(X_unlabel.as_matrix())
-X_unlabel1 =  feat_selector.transform(X_unlabel1.as_matrix())
+# X_unlabel1 =  feat_selector.transform(X_unlabel1.as_matrix())
 print(X_label.shape)
-X = np.concatenate((X_label,X_unlabel,X_unlabel1), axis=0)
+X = np.concatenate((X_label,X_unlabel), axis=0)
 print(X.shape)
 kmn = KMeans(algorithm='auto', copy_x=True, init='k-means++', max_iter=600,
     n_init=10, n_jobs=1, precompute_distances='auto', n_clusters=2,
