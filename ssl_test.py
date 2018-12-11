@@ -28,7 +28,9 @@ y_test = unLabelData['IS_MALWARE']
 features = X_test.columns[0:]
 print(features.shape)
 
-
+feat_selector = BorutaPy(model, n_estimators='auto', verbose=0, random_state=1,max_iter=20)
+feat_selector.fit(X_label.as_matrix(), y_label.as_matrix())
+X_label = feat_selector.transform(X_label.as_matrix())
 
 
 model_factory = [
@@ -55,9 +57,7 @@ model_factory = [
 for model in model_factory:
     model.seed = 42
     kf = KFold(n_splits=10)
-    feat_selector = BorutaPy(model, n_estimators='auto', verbose=0, random_state=1,max_iter=20)
-    feat_selector.fit(X_label.as_matrix(), y_label.as_matrix())
-    X_label = feat_selector.transform(X_label.as_matrix())
+   
 
 
     scores = cross_val_score(model, X_label, y_label, cv=kf)
