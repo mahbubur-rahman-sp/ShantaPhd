@@ -8,6 +8,7 @@ from sklearn.neighbors import KNeighborsClassifier
 from sklearn.ensemble import RandomForestClassifier, ExtraTreesClassifier, GradientBoostingClassifier
 import matplotlib.pyplot as plt
 from sklearn.svm import SVC
+from sklearn.cluster import KMeans
 from sklearn import tree
 from PseudoLabeler import PseudoLabeler 
 from boruta import BorutaPy
@@ -34,8 +35,25 @@ target = 'IS_MALWARE'
 
 labelData = shuffle(pd.read_csv("label.csv"))
 X_label = labelData.drop('IS_MALWARE', axis=1)  
+
 y_label = labelData['IS_MALWARE'] 
 
+
+
+unlabeldata = shuffle(pd.read_csv("Unlabel.csv"))
+X_unlabel = unlabeldata.drop('IS_MALWARE', axis=1)  
+
+X = np.concatenate((X_label,X_unlabel), axis=0)
+
+print(X.shape)
+kmn = KMeans(algorithm='auto', copy_x=True, init='k-means++', max_iter=600,
+    n_init=10, n_jobs=1, precompute_distances='auto', n_clusters=3,
+    random_state=None, tol=0.0001, verbose=0)
+kmn.fit(X)
+alldistances = kmn.fit_transform(X_label)
+print(X_label.shape)
+X_label = np.append(X_label,alldistances,axis=1)
+print(X_label.shape)
 
 X_train, X_test, y_train, y_test = train_test_split(X_label, y_label, test_size = 0.20)
 
@@ -51,11 +69,15 @@ model_factory = [
  
 ]
 
-feat_selector = BorutaPy(RandomForestClassifier(n_estimators=10), n_estimators='auto', verbose=1, random_state=1,max_iter=100)
-feat_selector.fit(X_train.as_matrix(), y_train.as_matrix())
-X1_train = feat_selector.transform(X_train.as_matrix())
-X1_test =  feat_selector.transform(X_test.as_matrix())
+feat_selector = BorutaPy(RandomForestClassifier(n_estimators=10), n_estimators='auto', verbose=1, random_state=1,max_iter=40)
+feat_selector.fit(X_train, y_train)
+X1_train = feat_selector.transform(X_train)
+X1_test =  feat_selector.transform(X_test)
 _features = feat_selector.n_features_ 
+
+# X1_train = X_train
+# X1_test = X_test
+# _features = 502
 
 for model in model_factory:
     

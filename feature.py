@@ -3,6 +3,7 @@
 from androguard.core.bytecodes import apk, dvm
 from androguard.core.analysis.analysis import Analysis
 import re
+import xml.etree.ElementTree as ET
 
 def get_permissions(path):
   """
@@ -24,6 +25,36 @@ def get_permissions(path):
   perms.sort()
 
   return perms
+
+def get_Activities(path):
+  """
+  Get the permissions from an app.
+
+  Parameters:
+    path - The path of the app to be decompiled
+
+  Returns:
+    A sorted list of permissions
+
+  """
+
+  app = apk.APK(path)
+  root = app.get_android_manifest_xml()
+  nsmap ="{"+ root.nsmap['android'] +"}"
+  for activity in root.iter('activity'):
+    name = activity.get(nsmap+'name')
+    prmission = activity.get(nsmap+'permission')
+    print(name)
+    print(prmission)
+    
+    for intent in activity.findall('intent-filter'):
+      intent_action = intent[0].get(nsmap+'name')
+      print(intent_action)
+  
+  # Make sure there is no redundancies, and then sort the list.
+  
+
+  return []
 
 
 def get_apis(path):
@@ -79,6 +110,38 @@ def get_apis(path):
   methods.sort()
 
   return methods
+
+def get_apiName(path):
+  """
+  Get the APIs from an app.
+
+  Parameters:
+    path - The path of the app to be decompiled
+
+  Returns:
+    A sorted list of APIs with parameters
+
+  """
+
+  # You can see the documents of androguard to get the further details
+  # of the decompilation procedures.
+  app = apk.APK(path)
+  app_dex = dvm.DalvikVMFormat(app.get_dex())
+  app_x = Analysis(app_dex)
+
+  methods = set()
+  cs = [cc.get_name() for cc in app_dex.get_classes()]
+
+  for m in app_dex.get_methods():
+    method_class_analysis = app_x.get_method_analysis(m)
+    method_class_analysis
+    print(m)
+   
+
+    
+
+
+  return []
 
 
 def main():
