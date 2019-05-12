@@ -64,6 +64,8 @@ class PseudoLabeler(BaseEstimator, ClassifierMixin):
         self.model.fit(X, y)
         pseudo_labels = self.model.predict(self.unlabled_data[self.features])
         
+       
+
         # Add the pseudo-labels to the test set
         pseudo_data = self.unlabled_data.copy(deep=True)
         pseudo_data[self.target] = pseudo_labels
@@ -72,7 +74,7 @@ class PseudoLabeler(BaseEstimator, ClassifierMixin):
         # the training set
         sampled_pseudo_data = pseudo_data.sample(n=num_of_samples)
         temp_train = pd.concat([X, y], axis=1)
-        augemented_train = pd.concat([sampled_pseudo_data, temp_train])
+        augemented_train = pd.concat([sampled_pseudo_data, temp_train]).dropna()
 
         return shuffle(augemented_train)
         

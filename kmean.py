@@ -8,14 +8,14 @@ from sklearn.metrics import classification_report, confusion_matrix, accuracy_sc
 from sklearn.cluster import KMeans
 import matplotlib.pyplot as plt
 from sklearn.metrics.pairwise import euclidean_distances
-from boruta import BorutaPy
-from sklearn.preprocessing import StandardScaler
-from keras.models import Sequential
-import tensorflow as tf
-from keras.utils import multi_gpu_model
+# from boruta import BorutaPy
+# from sklearn.preprocessing import StandardScaler
+# from keras.models import Sequential
+# import tensorflow as tf
+# from keras.utils import multi_gpu_model
 
 # Import `Dense` from `keras.layers`
-from keras.layers import Dense
+#from keras.layers import Dense
 
 
 
@@ -26,31 +26,34 @@ def calculateAccuracy(model,data,target):
 
 
 
-labelData = shuffle(pd.read_csv("label.csv"))
+labelData = shuffle(pd.read_csv("outAll.csv"))
 X_label = labelData.drop('IS_MALWARE', axis=1)  
 y_label = labelData['IS_MALWARE'] 
 
-features = X_label.columns[0:]
+X_test = X_label[X_label.columns[-10:]]
+
+X = X_label[X_label.columns[0:-10]]
+
+kmn = KMeans(algorithm='auto', copy_x=True, init='k-means++', max_iter=600,
+    n_init=10, n_jobs=1, precompute_distances='auto', n_clusters=3,
+    random_state=None, tol=0.0001, verbose=0)
+kmn.fit(X_test)
+alldistances = kmn.fit_transform(X_test)
+
+print(X.shape)
+model =RandomForestClassifier(n_jobs=-1)
+print(calculateAccuracy(model,X,y_label))
+X = np.append(X,alldistances,axis=1)
+print(X.shape)
 
 model =RandomForestClassifier(n_jobs=-1)
-print(calculateAccuracy(model,X_label,y_label))
-
-
-feat_selector = BorutaPy(model, n_estimators='auto', verbose=0, random_state=1,max_iter=20)
-feat_selector.fit(X_label.as_matrix(), y_label.as_matrix())
-X_label = feat_selector.transform(X_label.as_matrix())
-
-selected = feat_selector.support_
-
-for i in range(len(features)):
-    if(selected[i]):
-        print(features[i]+'\n')
-
-print('\n')
-print(calculateAccuracy(model,X_label,y_label))
+print(calculateAccuracy(model,X,y_label))
 
 
 
+
+
+""" 
 unlabelData = shuffle(pd.read_csv("Unlabel.csv"))
 
 X_unlabel = unlabelData.drop('IS_MALWARE', axis=1)  
@@ -73,7 +76,7 @@ alldistances = kmn.fit_transform(X_label)
 print(X_label.shape)
 X_label = np.append(X_label,alldistances,axis=1)
 print(X_label.shape)
-print(calculateAccuracy(model,X_label,y_label))
+print(calculateAccuracy(model,X_label,y_label)) """
 
 
 
